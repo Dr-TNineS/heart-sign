@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日心签 / 缘分种子生成器</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-1: #101524;
+      --bg-2: #1d2438;
+      --bg-3: #2e314d;
+      --card: rgba(255, 255, 255, 0.1);
+      --card-strong: rgba(255, 255, 255, 0.16);
+      --line: rgba(255, 255, 255, 0.16);
+      --text: #f7f0e8;
+      --muted: #cfc4d7;
+      --soft: #f3cfa8;
+      --accent: #95d7d0;
+      --accent-2: #e8b6c9;
+      --danger-soft: #f0b6a6;
+      --shadow: 0 22px 70px rgba(0, 0, 0, 0.36);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 16%, rgba(149, 215, 208, 0.18), transparent 26%),
+        radial-gradient(circle at 86% 8%, rgba(232, 182, 201, 0.17), transparent 28%),
+        linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.78) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.42) 0 1px, transparent 1.8px);
+      background-position: 14px 24px, 70px 100px;
+      background-size: 130px 130px, 190px 190px;
+      mask-image: linear-gradient(to bottom, black, transparent 78%);
+      opacity: 0.44;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 42px 0 28px;
+      position: relative;
+    }
+
+    .hero {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 6vw, 58px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.86fr) minmax(360px, 1.14fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel,
+    .result-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.07));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius);
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      background: rgba(10, 14, 25, 0.58);
+      color: var(--text);
+      outline: none;
+      padding: 12px 13px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(149, 215, 208, 0.72);
+      box-shadow: 0 0 0 4px rgba(149, 215, 208, 0.14);
+      background: rgba(10, 14, 25, 0.75);
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    .mood-row {
+      display: grid;
+      grid-template-columns: 1fr 78px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      accent-color: var(--accent);
+    }
+
+    input[type="number"] {
+      text-align: center;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      color: #121827;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 12px 17px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--soft), var(--accent));
+      box-shadow: 0 12px 28px rgba(149, 215, 208, 0.22);
+    }
+
+    .secondary {
+      background: rgba(255, 255, 255, 0.14);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .secondary:hover {
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+    }
+
+    .result-card {
+      min-height: 420px;
+      overflow: hidden;
+    }
+
+    .empty-state,
+    .result-content {
+      padding: 24px;
+    }
+
+    .empty-state {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .result-content {
+      display: none;
+    }
+
+    .result-content.visible {
+      display: block;
+    }
+
+    .seal {
+      display: inline-grid;
+      place-items: center;
+      min-width: 74px;
+      height: 74px;
+      margin-bottom: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(243, 207, 168, 0.58);
+      background: rgba(243, 207, 168, 0.11);
+      color: var(--soft);
+      font-size: 26px;
+      font-weight: 800;
+      box-shadow: inset 0 0 24px rgba(243, 207, 168, 0.12);
+    }
+
+    .result-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .result-title h2 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .grade {
+      color: #17131e;
+      background: var(--accent-2);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .stat {
+      min-height: 82px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 13px;
+      background: rgba(8, 12, 22, 0.28);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .stat strong {
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .keyword {
+      border: 1px solid rgba(149, 215, 208, 0.33);
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: #d9fffb;
+      background: rgba(149, 215, 208, 0.1);
+      font-size: 13px;
+    }
+
+    .prompt-box {
+      margin-top: 18px;
+    }
+
+    .prompt-box label {
+      margin-bottom: 8px;
+    }
+
+    #promptOutput {
+      min-height: 270px;
+      white-space: pre-wrap;
+    }
+
+    .copy-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .toast {
+      color: var(--accent);
+      font-size: 13px;
+      min-height: 20px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    footer {
+      margin-top: 22px;
+      color: rgba(247, 240, 232, 0.68);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .page {
+        width: min(100% - 22px, 680px);
+        padding-top: 28px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .panel,
+      .result-card {
+        border-radius: 16px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .stats,
+      .mood-row {
+        grid-template-columns: 1fr;
+      }
+
+      .actions button,
+      .copy-row button {
+        width: 100%;
+      }
+
+      .result-title h2 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="eyebrow">娱乐向仪式感 prompt 生成器</div>
+      <h1 id="pageTitle">今日心签 / 缘分种子生成器</h1>
+      <p class="subtitle">输入今天的日期、心情和问题，把它们变成一枚可复现的心签参数。这里不做预测，只生成可以复制给任意 AI 的温柔解读 prompt。</p>
+    </section>
+
+    <section class="layout">
+      <form class="panel" id="seedForm">
+        <div class="form-grid">
+          <label>
+            日期
+            <input id="dateInput" type="date" required>
+          </label>
+
+          <label>
+            心情分数
+            <div class="mood-row">
+              <input id="moodRange" type="range" min="1" max="10" value="6">
+              <input id="moodNumber" type="number" min="1" max="10" value="6" inputmode="numeric">
+            </div>
+          </label>
+
+          <label>
+            问题类型
+            <select id="questionType">
+              <option>桃花运</option>
+              <option selected>暧昧关系</option>
+              <option>复合可能</option>
+              <option>是否主动联系</option>
+              <option>关系走向</option>
+              <option>自定义</option>
+            </select>
+          </label>
+
+          <label>
+            我的问题
+            <textarea id="questionText" placeholder="例如：我最近和她聊天变少了，还要不要主动？"></textarea>
+            <span class="hint">这句话会参与 seed。相同输入会得到相同心签；点击重新生成会加入额外盐值。</span>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="primary" type="submit">生成今日心签</button>
+          <button class="secondary" id="rerollButton" type="button">重新生成</button>
+        </div>
+      </form>
+
+      <article class="result-card" aria-live="polite">
+        <div class="empty-state" id="emptyState">
+          <p>今天的签文还在夜色里。<br>填写左侧信息后，生成一枚只属于这组输入的心签。</p>
+        </div>
+
+        <div class="result-content" id="resultContent">
+          <div class="seal" id="luckyNumber">--</div>
+          <div class="result-title">
+            <h2 id="omenName">签象</h2>
+            <span class="grade" id="gradeName">签等</span>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <span>关键词</span>
+              <div class="keywords" id="keywordList"></div>
+            </div>
+            <div class="stat">
+              <span>行动倾向</span>
+              <strong id="actionLabel">--</strong>
+            </div>
+          </div>
+
+          <div class="prompt-box">
+            <label for="promptOutput">复制给 AI 的 Prompt</label>
+            <textarea id="promptOutput" readonly></textarea>
+            <div class="copy-row">
+              <button class="primary" id="copyButton" type="button">复制 Prompt</button>
+              <span class="toast" id="copyToast">已复制</span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <footer>本工具仅用于娱乐和自我觉察，不提供现实决策、心理咨询或命运预测。</footer>
+  </main>
+
+  <script>
+    const omens = [
+      "雾中灯",
+      "春水初生",
+      "月下回音",
+      "风过旧窗",
+      "星落掌心",
+      "雨后微光",
+      "迟开的花",
+      "未寄出的信",
+      "岔路口的猫",
+      "远处的灯塔"
+    ];
+
+    const keywordPool = [
+      "等待",
+      "误会",
+      "主动",
+      "克制",
+      "回音",
+      "靠近",
+      "观察",
+      "旧缘",
+      "新机",
+      "界限",
+      "安心",
+      "试探",
+      "重逢",
+      "沉默",
+      "微光",
+      "澄清",
+      "节奏",
+      "转机",
+      "坦诚",
+      "距离"
+    ];
+
+    const actionLabels = [
+      "适合观察",
+      "适合整理心情",
+      "适合轻微主动",
+      "适合等待反馈",
+      "适合降低期待",
+      "适合确认边界"
+    ];
+
+    const gradeWeights = [
+      { label: "上上签", weight: 9 },
+      { label: "上吉", weight: 18 },
+      { label: "中吉", weight: 25 },
+      { label: "小吉", weight: 18 },
+      { label: "平签", weight: 16 },
+      { label: "小凶", weight: 9 },
+      { label: "下签", weight: 5 }
+    ];
+
+    const dateInput = document.querySelector("#dateInput");
+    const moodRange = document.querySelector("#moodRange");
+    const moodNumber = document.querySelector("#moodNumber");
+    const questionType = document.querySelector("#questionType");
+    const questionText = document.querySelector("#questionText");
+    const seedForm = document.querySelector("#seedForm");
+    const rerollButton = document.querySelector("#rerollButton");
+    const emptyState = document.querySelector("#emptyState");
+    const resultContent = document.querySelector("#resultContent");
+    const luckyNumber = document.querySelector("#luckyNumber");
+    const omenName = document.querySelector("#omenName");
+    const gradeName = document.querySelector("#gradeName");
+    const keywordList = document.querySelector("#keywordList");
+    const actionLabel = document.querySelector("#actionLabel");
+    const promptOutput = document.querySelector("#promptOutput");
+    const copyButton = document.querySelector("#copyButton");
+    const copyToast = document.querySelector("#copyToast");
+
+    let rerollSalt = "";
+    let toastTimer = null;
+
+    function getTodayString() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function hashStringToSeed(text) {
+      let hash = 2166136261;
+      for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function createSeededRandom(seedText) {
+      let state = hashStringToSeed(seedText) || 1;
+      return function random() {
+        state += 0x6D2B79F5;
+        let t = state;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function clampMood(value) {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isNaN(parsed)) {
+        return 6;
+      }
+      return Math.min(10, Math.max(1, parsed));
+    }
+
+    function pickFromArray(items, random) {
+      return items[Math.floor(random() * items.length)];
+    }
+
+    function pickWeightedGrade(random) {
+      const totalWeight = gradeWeights.reduce((sum, item) => sum + item.weight, 0);
+      let cursor = random() * totalWeight;
+      for (const item of gradeWeights) {
+        cursor -= item.weight;
+        if (cursor <= 0) {
+          return item.label;
+        }
+      }
+      return gradeWeights[gradeWeights.length - 1].label;
+    }
+
+    function pickKeywords(random) {
+      const count = 4 + Math.floor(random() * 3);
+      const pool = [...keywordPool];
+      const result = [];
+      while (result.length < count && pool.length > 0) {
+        const index = Math.floor(random() * pool.length);
+        result.push(pool.splice(index, 1)[0]);
+      }
+      return result;
+    }
+
+    function getSeedParts() {
+      const mood = clampMood(moodNumber.value);
+      moodRange.value = mood;
+      moodNumber.value = mood;
+      return {
+        date: dateInput.value || getTodayString(),
+        mood,
+        type: questionType.value,
+        question: questionText.value.trim()
+      };
+    }
+
+    function buildPrompt(parts, result) {
+      const questionLine = parts.question || "我暂时没有写下具体问题，只想围绕今天的情感状态做一次轻量觉察。";
+      return `我想做一次娱乐向的情感/姻缘解读。请不要把它当作真实预测，也不要给绝对化结论，而是根据下面这些“今日心签参数”，用温柔、克制、有仪式感的方式帮我解读。
+
+【日期】${parts.date}
+【问题类型】${parts.type}
+【我的问题】${questionLine}
+【心情分数】${parts.mood}/10
+【今日签号】${result.number}
+【签等】${result.grade}
+【签象】${result.omen}
+【关键词】${result.keywords.join("、")}
+【行动倾向】${result.action}
+
+请从以下角度解读：
+1. 当前关系氛围
+2. 我内心真正焦虑的点
+3. 这个签象可能象征什么
+4. 今天适合怎样调整心态
+5. 给我一段温柔但不哄骗我的总结
+
+要求：
+- 不要说“你一定会怎样”
+- 不要制造焦虑
+- 不要鼓励沉迷算命
+- 以娱乐、陪伴、自我觉察为主`;
+    }
+
+    function generateHeartSign() {
+      const parts = getSeedParts();
+      const seedText = `${parts.date}|${parts.mood}|${parts.type}|${parts.question}|${rerollSalt}`;
+      const random = createSeededRandom(seedText);
+      const result = {
+        number: 1 + Math.floor(random() * 100),
+        grade: pickWeightedGrade(random),
+        omen: pickFromArray(omens, random),
+        keywords: pickKeywords(random),
+        action: pickFromArray(actionLabels, random)
+      };
+
+      luckyNumber.textContent = result.number;
+      omenName.textContent = result.omen;
+      gradeName.textContent = result.grade;
+      actionLabel.textContent = result.action;
+      keywordList.innerHTML = "";
+      result.keywords.forEach((keyword) => {
+        const tag = document.createElement("span");
+        tag.className = "keyword";
+        tag.textContent = keyword;
+        keywordList.appendChild(tag);
+      });
+      promptOutput.value = buildPrompt(parts, result);
+
+      emptyState.style.display = "none";
+      resultContent.classList.add("visible");
+    }
+
+    async function copyPrompt() {
+      if (!promptOutput.value) {
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(promptOutput.value);
+      } catch (error) {
+        promptOutput.select();
+        document.execCommand("copy");
+      }
+      showCopyToast();
+    }
+
+    function showCopyToast() {
+      window.clearTimeout(toastTimer);
+      copyToast.classList.add("show");
+      toastTimer = window.setTimeout(() => {
+        copyToast.classList.remove("show");
+      }, 1600);
+    }
+
+    moodRange.addEventListener("input", () => {
+      moodNumber.value = moodRange.value;
+      rerollSalt = "";
+    });
+
+    moodNumber.addEventListener("input", () => {
+      moodNumber.value = clampMood(moodNumber.value);
+      moodRange.value = moodNumber.value;
+      rerollSalt = "";
+    });
+
+    [dateInput, questionType, questionText].forEach((field) => {
+      field.addEventListener("input", () => {
+        rerollSalt = "";
+      });
+    });
+
+    seedForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      rerollSalt = "";
+      generateHeartSign();
+    });
+
+    rerollButton.addEventListener("click", () => {
+      rerollSalt = `${Date.now()}-${Math.random()}`;
+      generateHeartSign();
+    });
+
+    copyButton.addEventListener("click", copyPrompt);
+
+    dateInput.value = getTodayString();
+  </script>
+</body>
+</html>
